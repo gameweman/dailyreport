@@ -1,0 +1,38 @@
+name: Daily Joke Report
+
+on:
+  schedule:
+    # Run every day at 9 AM UTC (adjust timezone as needed)
+    - cron: '0 9 * * *'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  send-report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Fetch jokes and send report
+        env:
+          EMAIL_ADDRESS: gameweman168@outlook.com
+          SMTP_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+        run: python scripts/fetch_and_send.py
+
+      - name: Commit report (optional)
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -A
+          git commit -m "Daily report - $(date +'%Y-%m-%d')" || echo "No changes to commit"
+          git push
+        continue-on-error: true
